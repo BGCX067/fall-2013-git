@@ -1,0 +1,307 @@
+<!--
+Nikolas Wolfe
+October 16th, 2013
+11-751 Speech Recognition and Understanding
+Language Technologies Institute
+Carnegie Mellon University
+
+Word Error Rate - Dynamic Programming
+Homework 2, Problem 1
+
+This is my own work. Any sources referred to have been 
+properly credited in the comments. This is designed for
+viewing on a mobile phone or iPad. 
+-->
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale:1, user-scalable=no">
+<title>Dynamic Programming & WER</title>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script>
+$(document).ready(function() {
+
+	// some constants
+	var MATCH = "MATCH";
+	var DEL = "DEL";
+	var INS = "INS";
+	var SUB = "SUB";
+	var dtw, ref, hyp;
+	
+	// hide distance matrix button
+	$('#matrix').hide();
+	
+	// When the word error rate button is clicked
+    $('#calc').click( function() {
+
+		// trim all whitespace and split by word boundaries
+		ref = $.trim($('#ref').val().replace(/\s+/g, " ")).split(" ");
+		hyp = $.trim($('#hyp').val().replace(/\s+/g, " ")).split(" ");
+		dtw = dist_matrix(ref, hyp);
+		
+		var d = dtw[dtw.length - 1][dtw[0].length - 1];
+		var wer = ((d[0] / ref.length) * 100).toFixed(0);
+		
+		$('#wer').html( "WER: " + wer + "%");
+		$('#align').html( generate_alignment( dtw, ref, hyp ) );
+		$('#matrix').show();
+	});
+	
+	// click event to display distance matrix
+	$('#matrix').click( function matrix() {
+		var v = $('#matrix').val();
+		if( v == 'Show Distance Matrix' ) {
+			$('#wer_table').html( make_table( dtw, ref, hyp ) );
+			$('#matrix').val('Hide Distance Matrix');
+			$('#wer_table').show();
+		} else {
+			$('#wer_table').hide();
+			$('#matrix').val('Show Distance Matrix');
+		}
+	});
+	
+	// calculate the distance matrix
+	function dist_matrix(ref, hyp) {
+	
+		// initialize the distance array
+		var dtw = new Array( ref.length + 1 );
+		$.each(dtw, function( i ) {
+			dtw[i] = new Array( hyp.length + 1 );
+			$.each(dtw[i], function( j ) {
+				dtw[i][j] = [0,0,0,""];
+			});
+		});
+		
+		// initialize edge weights in the array
+		var i, j;
+		$.each(dtw, function( i ) {
+			dtw[i][0][0] = i;
+		});
+		$.each(dtw[0], function( j ) {
+			dtw[0][j][0] = j;
+		});
+		
+		/* calculate the distance matrix
+		 *
+		 * NOTE: this draws inspiration from the Wikipedia article on 
+		 * Levenshtein Distance. here: http://en.wikipedia.org/wiki/Levenshtein_distance
+		 */
+		var m, n;
+		m = dtw.length;
+		n = dtw[0].length;
+		for( i = 1; i < m; i++ ) {
+			for( j = 1; j < n; j++ ) {
+				
+				var r, h;
+				r = ref[i - 1].toLowerCase();
+				h = hyp[j - 1].toLowerCase();
+				
+				if( r == h ) { // match
+					
+					// take diagonal distance, save back pointer
+					dtw[i][j] = [dtw[i - 1][j - 1][0],(i - 1),(j - 1),"MATCH"]; 
+					
+				} else { // mismatch
+				
+					var del, ins, sub, min;
+					del = dtw[i - 1][j][0] + 1;		// deletion
+					ins = dtw[i][j - 1][0] + 1;		// insertion
+					sub = dtw[i - 1][j - 1][0] + 1;	// substitution
+					
+					// find the minimum distance, save the back-pointers
+					min = Math.min( del, ins, sub );
+					if( min == del ) {
+						dtw[i][j] = [min,(i - 1),(j),DEL];
+					} 
+					else if( min == ins ) {
+						dtw[i][j] = [min,(i),(j - 1),INS];
+					}
+					else {
+						dtw[i][j] = [min,(i - 1),(j - 1),SUB];
+					}
+					
+				}
+			}
+		}
+		return dtw;
+	}
+	
+	// print out the distance matrix
+	function make_table(t, ref, hyp) {
+		
+		// initialize the output table
+		var table = new Array( t.length + 1 ) 
+		$.each(table, function( i ) {
+			table[i] = new Array( t[0].length + 1 );
+			$.each(table[i], function( j ) {
+				if( i > 0 && j > 0 ) {
+					table[i][j] = t[i - 1][j - 1][0];
+				} else {
+					table[i][j] = "-";
+				}
+			});
+		});
+		
+		// put the phrase words on the outside
+		var i, j;
+		$.each(table, function( i ) {
+			if( i > 1 )
+				table[i][0] = ref[i - 2];
+		});
+		$.each(table[0], function( j ) {
+			if( j > 1 )
+				table[0][j] = hyp[j - 2];
+		});
+		
+		// ouput an HTML table
+		var out = "<h2>Distance Matrix:</h2><table id='output' border='1'>";
+		$.each(table, function( i, r ) {
+			out += "<tr>";
+			$.each(table[0], function( j, h ) {
+				out += "<td>" + table[i][j] + "</td>";
+			});
+			out += "</tr>";
+		});
+		return out + "</table>";
+	}
+	
+	// output the optimal alignment
+	function generate_alignment( dtw, ref, hyp ) {
+		var align =	"<h2>Optimal Alignment:</h2>" 
+					+ "<table id='tbl_align'>"
+					+ backtrack(dtw, dtw.length-1, dtw[0].length-1, ref, hyp, new Array())
+					+ "</table>";
+		return align;
+	}
+	
+	// recursive backtracking
+	function backtrack( dtw, i, j, ref, hyp, arr ) {
+		if( i == 0 && j == 0 ) {
+			
+			// generate 'align' table
+			var r1 = "<tr>";
+			var r2 = "<tr>";
+			var r3 = "<tr>";
+			$.each(arr, function( i, val ) {
+				var type = val[2];
+				var td = "";
+				
+				// ERROR gets 'red' class
+				if ( type == DEL || type == SUB || type == INS ) {
+					td = "<td class='red line'>";
+				} 
+				// match gets green class
+				else {
+					td = "<td class='green line'>";
+				}
+				r1 = td + val[0] + "</td>" + r1;
+				r2 = td + val[1] + "</td>" + r2;
+				r3 = "<td>" + val[2] + "</td>" + r3; // no line 
+			});
+			r1 += "</tr>"; r2 += "</tr>"; r3 += "</tr>";
+			return r1 + r2 + r3;
+		} 
+		else {
+			
+			var type = dtw[i][j][3];
+			
+			// handle case where first word of hyp doesn't match
+			if( typeof hyp[j-1] === "undefined" ) { hyp[j-1] = "-";	} 
+			else if( typeof ref[i-1] === "undefined") { ref[i-1] = "-"; }
+			
+			// match
+			if( type == MATCH ) { 
+				arr.push([ ref[i - 1], hyp[j - 1], "" ]);
+				
+			} 
+			// deletion
+			else if ( type == DEL ) { 
+				arr.push([ ref[i - 1], "", DEL ]);
+				
+			} 
+			// insertion
+			else if ( type == INS ) { 
+				arr.push([ "", hyp[j - 1], INS ]);
+				
+			} 
+			// substitution
+			else { 
+				arr.push([ ref[i - 1], hyp[j - 1], SUB ]);
+			} 
+			
+			// recursive step
+			return backtrack( dtw, dtw[i][j][1], dtw[i][j][2], ref, hyp, arr );
+		}
+	}
+});
+</script>
+<style type="text/css">
+body { text-align:center; font-family:arial; overflow:hidden; }
+section {
+    position: absolute; top:0; bottom:0; left:2px; right:2px;
+    overflow-y: auto;
+	overflow-x: hidden;
+}
+#container { 
+	width:95%; 
+	margin-top:1%;
+	margin-bottom:1%;
+	border:2px solid #CCC; 
+	margin-left:auto; 
+	margin-right:auto; 
+	padding:1%;
+	box-shadow: 0 0 5px #ddd;
+} 
+h1 { font-size:8vw;}
+h2 { font-size:5vw; }
+table { width:100%; margin-right:auto; margin-left:auto; }
+#output { table-layout: fixed; width:100% }
+#output td {
+	text-align:center; 
+	padding:1%;
+	font-size:2.5vw;
+}
+#tbl_align {
+	text-align:left;
+	padding:0;
+	font-size:3vw;
+	table-layout:auto;
+	margin-bottom:2em;
+	border-collapse:collapse;
+	width:95%;
+	overflow:scroll;
+}
+#tbl_align td {
+	padding:0.5em;
+}
+#tbl_align td.line { 
+	border-bottom:1px solid #ddd; 
+}
+input { 
+	width:100%;
+	text-align:center; 
+	font-size:4.5vw; 
+	padding:0.5em 0 0.5em 0; 
+}
+.red { color:red; } .green { color:forestGreen; } .blue { color:deepSkyBlue; }
+#calc { margin-top:0.5em; font-size:6vw; padding:1em; width:100%; }	
+#wer { font-size:9vw; margin:0.5em; }
+#submit { background: #CCC; }
+</style>
+</head>
+<body>
+<section id="container";>
+<h1>Word Error Rate Calculator</h1>
+<form>
+<table>
+<tr><td><input id="ref" type="text" value="This great machine can recognize speech"/></td></tr>
+<tr><td><input id="hyp" type="text" value="This machine can wreck a nice beach"/></td></tr>
+<tr><td><input id="calc" type="button" value="Calculate Word Error Rate!"/></td></tr>
+</table>
+</form>
+<div id="wer"></div>
+<div id="align"></div>
+<input id='matrix' type='button' value='Show Distance Matrix'/>
+<div id="wer_table"></div>
+</section>
+</body>
+</html>

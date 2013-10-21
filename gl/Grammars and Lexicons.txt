@@ -1,0 +1,81 @@
+Grammars and Lexicons
+
+Overview
+
+Views of Language:
+	- Prescriptive
+	- Artistic
+	- Descriptive
+	
+Claims about knowledge of a language:
+	- Unconsious
+	- Complex
+	- Systematic
+	- Can be studied scientifically
+	
+Analyzing a language you don't know
+
+=============================================
+
+Rules that you know and rules that you aren't aware of
+
+Linguistics is about describing what people do when they use language, not 
+prescriptive rules. 
+
+It is NOT about writing "good" language
+
+It's about "normal" language use
+Things that are formal, informal, dialects, styles, etc
+
+Knowledge of Language
+
+"Every normal speaker of any natual language has acquired an 
+immensely rich and systematic body of unconcous knowledge, which
+can be investigated by consulting speakers' intuitive judgements."
+
+"Langauges are object of onsiderable complexity, which an be studied
+scientifically. That is, we can formulate hypotheses about linguistic 
+structure and test them against the facts of particular languages."
+
+Reflextive pronouns: what?
+
+THEORIES
+
+1. Hypothesis one: Semantic Hypothesis
+
+ -- When the thing acted on is the same as the person (actor). 
+
+2. Hypothesis two: Syntactic Hypothesis
+
+ -- When the object is the same as the subject
+ -- A subject can't be a reflexive pronoun
+ 
+3. Hypothesis three: Linear Hypothesis
+
+ -- Refer to something that was mentioned earlier
+ 
+4. Hypothesis four: Brute Force
+
+ -- Overwhelming evidence, you just follow rules because thats
+    "what you hear," so to speak
+
+From Wikipedia:
+
+A reflexive pronoun is a pronoun that is preceded by the noun, adjective, 
+adverb or pronoun to which it refers (its antecedent) within the same clause. 
+In generative grammar, a reflexive pronoun is an anaphor that must be bound by 
+its antecedent (see binding). In some languages, there is a difference between 
+reflexive and non-reflexive pronouns; but the exact conditions that determine 
+whether or not something be bound are not yet well defined and depend on the language 
+in question. It depends on the part of the sentence containing the pronoun.
+
+Goofy Ass Examples
+
+Concepts that have emerged...
+
+1. Clausemates
+ -- subject and object of the same verb
+ 
+2. Phrases
+ -- 
+ 
